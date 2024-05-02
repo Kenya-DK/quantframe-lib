@@ -1,6 +1,7 @@
 ﻿using QuantframeLib.LogParser;
 using QuantframeLib.Model;
 using QuantframeLib.Socket;
+using QuantframeLib.HttpServer;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +11,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using WatsonWebsocket;
+using SimpleHTTP;
+
 namespace QuantframeLib
 {
     internal class Program
@@ -19,7 +22,20 @@ namespace QuantframeLib
             SocketServer.Initializer("localhost", 7891);
             LogParserClient.Initializer();
             StaticData.Initializer("a");
+            //HttpServerClient.Initializer();
 
+            ////------------------- define routes -------------------
+            //Route.Before = (rq, rp) => { Console.WriteLine($"Requested: {rq.Url.PathAndQuery}"); return false; };
+            //Route.Add("/", (rq, rp, args1) =>
+            //{
+            //    rp.WithCORS().AsText("TYYYEYE");
+            //},"POST");
+            ////------------------- start server -------------------           
+            //var port = 4443;
+            //Console.WriteLine("Running HTTP server on: " + port);
+
+            //var cts = new CancellationTokenSource();
+            //var ts =SimpleHttp.HttpServer.ListenAsync(port, cts.Token, Route.OnHttpRequestAsync, useHttps: false);
             //using (WatsonWsClient wsc = new WatsonWsClient("localhost", 7891, false))
             //{
             //    wsc.ServerConnected += (s, e) => Console.WriteLine("Client connected to server");
