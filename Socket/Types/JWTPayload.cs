@@ -13,12 +13,14 @@ namespace QuantframeLib.Socket.Types
         #region Const/Static Values
         #endregion
         #region Private Values
-        private string _name;
+        private string _deviceId;
         private Guid _id;
         #endregion
         #region New
-        public JWTPayload()
+        public JWTPayload(Guid id, string deviceId)
         {
+            _id = id;
+            _deviceId = deviceId;
         }
         #endregion
         #region Methods
@@ -32,11 +34,10 @@ namespace QuantframeLib.Socket.Types
             set { _id = value; }
         }
 
-        [DataMember]
-        public string name
+        public string DeviceId
         {
-            get => _name;
-            set { _name = value; }
+            get => _deviceId;
+            set { _deviceId = value; }
         }
         #endregion
         #region ICopyable<JWTPayload> Members
@@ -48,7 +49,7 @@ namespace QuantframeLib.Socket.Types
         {
             var clone = (T)MemberwiseClone();
             clone._id= _id;
-            clone._name = _name;
+            clone._deviceId = _deviceId;
             return clone;
         }
         #endregion

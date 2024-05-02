@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SimpleHTTP;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -13,59 +14,30 @@ namespace QuantframeLib.HttpServer
         #region Const/Static Values
         #endregion
         #region Private Values
-
+        private static SimpleHTTP.HttpServer _server;
+        private static CancellationTokenSource _token;
         #endregion
         #region New
-        public static void Initializer()
+        public static void Initializer(string hostname, int port)
         {
-            StartServer();
+            _token = new CancellationTokenSource();
+            _server = new SimpleHTTP.HttpServer(port, _token.Token);
+            _server.Routes.OnBefore = (rq, rp) => { Console.WriteLine($"Requested: {rq.Url.PathAndQuery}"); return false; };
+            _server.Routes.Add("/", (rq, rp, args) =>
+            {
+                rp.WithCORS().AsText("asd");
+            });
+            _server.Routes.Add("/stock/addriven", (rq, rp, args) =>
+            {
+                var asd = rq.GetBodyAsString();
+                Console.WriteLine(asd);
+                rp.WithCORS().AsText("{}");
+            }, "POST");
+            _server.Start();
         }
         #endregion
         #region Method
 
-        #endregion
-        #region Loops
-        private static void StartServer()
-        {
-            new Thread(() =>
-            {
-                while (true)
-                {
-                    try
-                    {
-                        HttpListener listener = new HttpListener();
-                        listener.Prefixes.Add("http://localhost:8080/");
-                        listener.Start();
-                        while (true)
-                        {
-
-
-                            //HttpListenerContext context = listener.GetContext();
-                            //HttpListenerRequest request = context.Request;
-                            //HttpListenerResponse response = context.Response;
-                            //string responseString = "<HTML><BODY> Hello world!</BODY></HTML>";
-                            //byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
-                            //response.ContentLength64 = buffer.Length;
-                            //System.IO.Stream output = response.OutputStream;
-                            //output.Write(buffer, 0, buffer.Length);
-                            //output.Close();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                    }
-                    finally
-                    {
-                        Thread.Sleep(10000);
-                    }
-                }
-
-            })
-            {
-                IsBackground = true
-            }.Start();
-
-        }
         #endregion
         #region Override Method
         /// <summary>

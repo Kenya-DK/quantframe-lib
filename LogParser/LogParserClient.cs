@@ -21,6 +21,7 @@ namespace QuantframeLib.LogParser
         #region Private Values
         private static long lastPosition = 0;
         private static bool _coldStart = true;
+        private static string _lastReadMethod = "";
         #endregion
         #region New
         public static void Initializer()
@@ -35,7 +36,7 @@ namespace QuantframeLib.LogParser
             if (OnTradeEvent.ProcessLine(line))
                 return;
             if (OnConversationEvent.ProcessLine(line))
-                return;           
+                return;
             if (OnBlessingEvent.ProcessLine(line))
                 return;
         }
@@ -49,10 +50,12 @@ namespace QuantframeLib.LogParser
                 {
                     try
                     {
+                        string mode = "";
                         //if (StaticData.WFProcessID == -1)
                         //    continue;
                         if (StaticData.IsAlecaFrameOpen)
                         {
+                            mode = "file";
                             string eeLogPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Warframe\EE.log");
                             DateTime lastCheckedTime = DateTime.MinValue; // Initialize to a default value
                             if (!File.Exists(eeLogPath))
@@ -87,6 +90,7 @@ namespace QuantframeLib.LogParser
                         }
                         else
                         {
+                            mode = "memory";
                             using (MemoryMappedFile orOpen = MemoryMappedFile.CreateOrOpen("DBWIN_BUFFER", 4096L))
                             using (EventWaitHandle eventWaitHandle1 = new EventWaitHandle(false, EventResetMode.AutoReset, "DBWIN_BUFFER_READY", out bool createdNew1))
                                 try
@@ -124,6 +128,11 @@ namespace QuantframeLib.LogParser
                                     eventWaitHandle1.Set();
                                 }
 
+                        }
+                        if (_lastReadMethod != mode)
+                        {
+                            _lastReadMethod = mode;
+                            Console.WriteLine("Reading EE.log using " + mode);
                         }
                     }
                     catch (Exception ex)

@@ -83,5 +83,21 @@ namespace SimpleHTTP
 
             return files;
         }
+
+        /// <summary>
+        /// Reads the body of the HTTP request and returns it as a string.
+        /// </summary>
+        /// <param name="request">The HTTP request.</param>
+        /// <returns>The body of the request as a string.</returns>
+        public static string GetBodyAsString(this HttpListenerRequest request)
+        {
+            // Create a StreamReader to read the request's InputStream
+            using (var reader = new StreamReader(request.InputStream))
+            {
+                // Read and return the entire request body as a string
+                return reader.ReadToEnd();
+            }
+        }
     }
+
 }

@@ -84,9 +84,9 @@ namespace SimpleHTTP
                             else
                             {
                                 await s.WaitAsync();
-                                //Task.Factory.StartNew(() => onHttpRequestAsync(ctx.Request, ctx.Response), TaskCreationOptions.None)
-                                //            .ContinueWith(t => s.Release())
-                                //            .Wait(0);
+                                Task.Factory.StartNew(() => _routes.HandleRequestAsync(ctx.Request, ctx.Response), TaskCreationOptions.None)
+                                            .ContinueWith(t => s.Release())
+                                            .Wait(0);
                             }
                         }
                         catch (Exception)
@@ -143,10 +143,11 @@ namespace SimpleHTTP
         /// <summary>
         /// Adds a new route to the server.
         /// </summary>
-        public
+        public Routes Routes
+        {
+            get { return _routes; }
+        }
         #endregion
-        #region Events
 
-        #endregion
     }
 }

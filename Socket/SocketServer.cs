@@ -70,12 +70,12 @@ namespace QuantframeLib.Socket
             string msg = Encoding.UTF8.GetString(e.Data.ToArray());
             try
             {
-                OnSocketEvent eventObj = Misc.Deserialize<Types.OnSocketEvent>(msg);
+                OnSocketEvent eventObj = Misc.Deserialize<OnSocketEvent>(msg);
                 if (eventObj.sendto.Contains("*"))
                     foreach (ClientMetadata client in _wss.ListClients())
                         _wss.SendAsync(client.Guid, msg);
                 else
-                    foreach (Guid client in _clients.Where(x => eventObj.sendto.Contains(x.name)).Select(x => x.Id))
+                    foreach (Guid client in _clients.Where(x => eventObj.sendto.Contains(x.DeviceId)).Select(x => x.Id))
                         _wss.SendAsync(client, msg);
             }
             catch (Exception)
@@ -104,13 +104,12 @@ namespace QuantframeLib.Socket
         {
             try
             {
-                if (e.Client.HttpContext.Request.Cookies["JWT"] == null)
-                    throw new Exception("Missing JWT cookie");
-
-                JWTPayload jwt = Misc.Deserialize<JWTPayload>(Misc.Base64Decode(e.Client.HttpContext.Request.Cookies["JWT"].Value));
-                jwt.Id = e.Client.Guid;
-                _clients.Add(jwt);
-                Console.WriteLine("Client connected: " + jwt.name + " " + jwt.Id + "Total clients: " + _clients.Count);
+                string deviceId = e.Client.HttpContext.Request.Cookies["DEVICEID"].Value;
+                if (string.IsNullOrEmpty(deviceId))
+                    throw new Exception("Missing DEVICEID cookie");
+                
+                _clients.Add(new JWTPayload(e.Client.Guid, deviceId));
+                Console.WriteLine("Client connected: " + deviceId + " " + e.Client.Guid + "Total clients: " + _clients.Count);
             }
             catch (Exception)
             {
