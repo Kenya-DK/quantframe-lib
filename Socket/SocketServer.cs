@@ -1,4 +1,4 @@
-﻿using QuantframeLib.Socket.Types;
+using QuantframeLib.Socket.Types;
 using QuantframeLib.Utils;
 using System;
 using System.Collections.Generic;
@@ -104,11 +104,20 @@ namespace QuantframeLib.Socket
         {
             try
             {
-                string deviceId = e.Client.HttpContext.Request.Cookies["DEVICEID"].Value;
+                string deviceId = e.Client.HttpContext.Request.Cookies["DEVICEID"]?.Value;
                 if (string.IsNullOrEmpty(deviceId))
+                {
+                    //_wss.SendAsync(e.Client.Guid, "{\"event\":\"error\",\"payload\":\"No device ID provided.\"}");
                     throw new Exception("Missing DEVICEID cookie");
-                
-                _clients.Add(new JWTPayload(e.Client.Guid, deviceId));
+                }
+
+                if (_clients.Any(x => x.DeviceId == deviceId))
+                {
+                    //_wss.SendAsync(e.Client.Guid, "{\"event\":\"error\",\"payload\":\"Device ID already in use.\"}");
+                    throw new Exception("Device ID already in use");
+                }
+
+                _clients.Add(new UserClient(e.Client.Guid, deviceId));
                 Console.WriteLine("Client connected: " + deviceId + " " + e.Client.Guid + "Total clients: " + _clients.Count);
             }
             catch (Exception)
