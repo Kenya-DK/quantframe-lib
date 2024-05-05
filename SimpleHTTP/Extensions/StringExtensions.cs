@@ -56,7 +56,7 @@ namespace SimpleHTTP
                 return String.Compare(query, regex, true) == 0;
 
             //make the last pattern greedy
-            regex = replaceLastOccurrence(regex, @"(.+?)", @"(.+)");
+            regex = ReplaceLastOccurrence(regex, @"(.+?)", @"(.+)");
 
             var match = Regex.Match(query, regex, RegexOptions.IgnoreCase);
             if (!match.Success) return false;
@@ -69,7 +69,7 @@ namespace SimpleHTTP
             return true;
         }
 
-        static string replaceLastOccurrence(string source, string oldStr, string newStr)
+        static string ReplaceLastOccurrence(string source, string oldStr, string newStr)
         {
             int place = source.LastIndexOf(oldStr);
 

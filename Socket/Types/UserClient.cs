@@ -1,5 +1,4 @@
-﻿using CompactJson;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -47,7 +46,6 @@ namespace QuantframeLib.Socket.Types
         /// <summary>
         /// Gets or sets the id.
         /// </summary>
-        [JsonProperty("id")]
         public Guid Id
         {
             get => _id;
@@ -56,7 +54,6 @@ namespace QuantframeLib.Socket.Types
         /// <summary>
         /// Gets or sets the device id.
         /// </summary>
-        [JsonProperty("device_id")]
         public string DeviceId
         {
             get => _deviceId;

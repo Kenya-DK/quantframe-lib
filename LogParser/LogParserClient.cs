@@ -2,6 +2,7 @@
 using QuantframeLib.LogParser.Events.Conversation;
 using QuantframeLib.LogParser.Events.Trade;
 using QuantframeLib.Model;
+using QuantframeLib.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -132,7 +133,7 @@ namespace QuantframeLib.LogParser
                         if (_lastReadMethod != mode)
                         {
                             _lastReadMethod = mode;
-                            Console.WriteLine("Reading EE.log using " + mode);
+                            Logger.Info("Log:ReadMethod", "Reading EE.log using " + mode);
                         }
                     }
                     catch (Exception ex)

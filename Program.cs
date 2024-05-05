@@ -13,39 +13,39 @@ using System.Threading;
 using System.Threading.Tasks;
 using WatsonWebsocket;
 using SimpleHTTP;
+using QuantframeLib.Utils;
+using System.Diagnostics;
 
 namespace QuantframeLib
 {
 
     internal class Program
     {
+
+        private static string GetArgsByName(string name)
+        {
+            string[] args = Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (args[i] == name && args.Length > i + 1)
+                    return args[i + 1];
+            }
+            return null;
+        }
+
         // Args 1:StoragePath, 2:SocketHost, 3:HttpServer
         static void Main(string[] args)
         {
-            string storagePath;
 
-            Tuple<string, int> SocketHost, HttpServer;
-            if (args[0] != null && Directory.Exists(args[0]))
-                storagePath = args[0];
-            else
-                storagePath = "Storage";
+            string storagePath = GetArgsByName("--storage") ?? "storage";
+            Tuple<string, int> SocketHost = SpiltHost(GetArgsByName("--socketHost")) ?? new Tuple<string, int>("localhost", 9999);
+            Tuple<string, int> HttpServer = SpiltHost(GetArgsByName("--httpServer")) ?? new Tuple<string, int>("localhost", 9998);
+            string keepAliveProcessName = GetArgsByName("--keepAlive");
 
-            if (args[1] != null)
-                SocketHost = SpiltHost(args[1]);
-            else
-                SocketHost = new Tuple<string, int>("localhost", 9999);
 
-            if (args[2] != null)
-                HttpServer = SpiltHost(args[2]);
-            else
-                HttpServer = new Tuple<string, int>("localhost", 9998);
 
-            // Validate the input
-            if (storagePath == null || SocketHost == null || HttpServer == null)
-            {
-                Console.WriteLine("Invalid input. Please provide the correct input.");
-                return;
-            }
+            Logger.Info("Main", $"StoragePath: {storagePath} | SocketHost: {SocketHost.Item1}:{SocketHost.Item2} | HttpServer: {HttpServer.Item1}:{HttpServer.Item2} | KeepAlive: {keepAliveProcessName}");
+
             // Initialize the server
             SocketServer.Initializer(SocketHost.Item1, SocketHost.Item2);
             // Initialize the log parser
@@ -54,10 +54,28 @@ namespace QuantframeLib
             StaticData.Initializer(storagePath);
             // Initialize the http server
             HttpServerClient.Initializer(HttpServer.Item1, HttpServer.Item2);
+            new Thread(() =>
+            {
+                while (true)
+                {
+                    Console.Title = "Connected Clients: " + SocketServer.Clients.Count();
+                    if (!string.IsNullOrEmpty(keepAliveProcessName) && Process.GetProcessesByName(keepAliveProcessName).Length == 0)
+                    {
+                        Logger.Critical("Main", "Keep alive process is not running. Exiting...");
+                        Environment.Exit(0);
+                    }
+                    Thread.Sleep(3000);
+                }
+            })
+            {
+                IsBackground = true
+            }.Start();
             while (true) ;
         }
         public static Tuple<string, int> SpiltHost(string host)
         {
+            if (host == null)
+                return null;
             if (!host.Contains(":"))
                 return null;
             string[] hostParts = host.Split(':');

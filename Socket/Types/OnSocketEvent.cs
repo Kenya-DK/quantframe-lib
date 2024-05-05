@@ -28,13 +28,14 @@ namespace QuantframeLib.Socket.Types
         {
             _id = eventId;
             _payload = payload;
-
         }
 
         #endregion
+
         #region Method 
 
         #endregion
+
         #region Override Method      
         /// <summary>
         /// Override ToString for <see cref="OnSocketEvent<t>"/>
@@ -47,12 +48,13 @@ namespace QuantframeLib.Socket.Types
             return base.ToString();
         }
         #endregion
+
         #region Method Get Set
         /// <summary>
         /// Gets or sets the event.
         /// </summary>
-        [DataMember]
-        public string id
+        [DataMember(Name = "id")]
+        public string Id
         {
             get { return _id; }
             set { _id = value; }
@@ -60,8 +62,9 @@ namespace QuantframeLib.Socket.Types
 
         /// <summary>
         /// Gets or sets the payload.
-        [DataMember]
-        public string payload
+        /// </summary>
+        [DataMember(Name = "payload")]
+        public string Payload
         {
             get { return _payload; }
             set { _payload = value; }
@@ -70,8 +73,8 @@ namespace QuantframeLib.Socket.Types
         /// <summary>
         /// Gets or sets the send to.
         /// </summary>
-        [DataMember]
-        public List<string> sendto
+        [DataMember(Name = "send_to")]
+        public List<string> SendTo
         {
             get { return _sendTo; }
             set { _sendTo = value; }

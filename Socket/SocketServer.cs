@@ -14,7 +14,7 @@ namespace QuantframeLib.Socket
         #endregion
         #region Private Values
         static WatsonWsServer _wss;
-        static List<JWTPayload> _clients = new List<JWTPayload>();
+        static List<UserClient> _clients = new List<UserClient>();
 
         #endregion
         #region New
@@ -26,17 +26,6 @@ namespace QuantframeLib.Socket
             _wss.ClientDisconnected += OnClientDisconnected;
             _wss.MessageReceived += OnMessageReceived;
             _wss.Start();
-            new Thread(() =>
-            {
-                while (true)
-                {
-                    Console.Title = "Connected Clients: " + _wss.ListClients().Count();
-                    Thread.Sleep(3000);
-                }
-            })
-            {
-                IsBackground = true
-            }.Start();
         }
         #endregion
         #region Override Method
@@ -53,7 +42,7 @@ namespace QuantframeLib.Socket
             StringBuilder sb = new StringBuilder();
             sb.Append("{");
             sb.Append("\"event\":\"" + eventId + "\",");
-            sb.Append("\"payload\":\"" + json+ "\"");
+            sb.Append("\"payload\":" + json);
             sb.Append("}");
             foreach (ClientMetadata client in _wss.ListClients())
                 _wss.SendAsync(client.Guid, sb.ToString());
@@ -68,19 +57,27 @@ namespace QuantframeLib.Socket
         private static void OnMessageReceived(object sender, MessageReceivedEventArgs e)
         {
             string msg = Encoding.UTF8.GetString(e.Data.ToArray());
+            if (string.IsNullOrEmpty(msg))
+                return;
+            Logger.Info("SocketServer:OnMessageReceived", "Message received: " + e.Client.Guid + ": " + msg);
+            if (msg == "disconnect")
+            {
+                _wss.DisconnectClient(e.Client.Guid);
+                return;
+            }
             try
             {
                 OnSocketEvent eventObj = Misc.Deserialize<OnSocketEvent>(msg);
-                if (eventObj.sendto.Contains("*"))
+                if (eventObj.SendTo.Contains("*"))
                     foreach (ClientMetadata client in _wss.ListClients())
                         _wss.SendAsync(client.Guid, msg);
                 else
-                    foreach (Guid client in _clients.Where(x => eventObj.sendto.Contains(x.DeviceId)).Select(x => x.Id))
+                    foreach (Guid client in _clients.Where(x => eventObj.SendTo.Contains(x.DeviceId)).Select(x => x.Id))
                         _wss.SendAsync(client, msg);
             }
             catch (Exception)
             {
-                Console.WriteLine("Message received from " + e.Client.Guid + ": " + msg);
+                Logger.Error("SocketServer:OnMessageReceived", "Invalid message received: " + e.Client.Guid + ": " + msg);
             }
         }
 
@@ -91,8 +88,20 @@ namespace QuantframeLib.Socket
         /// <param name="e">The event arguments containing the client information.</param>
         private static void OnClientDisconnected(object sender, DisconnectionEventArgs e)
         {
-            Console.WriteLine("Client disconnected: " + e.Client.Guid);
-            _clients.RemoveAll(x => x.Id == e.Client.Guid);
+            try
+            {
+                // Find the client in the list and remove it
+                UserClient client = _clients.FirstOrDefault(x => x.Id == e.Client.Guid);
+                _clients.RemoveAll(x => x.Id == e.Client.Guid);
+                if (client == null)
+                    Logger.Warning("SocketServer:OnClientDisconnected", "Client was not found in the list: " + e.Client.Guid);
+                else
+                    Logger.Info("SocketServer:OnClientDisconnected", "Client disconnected: " + client.DeviceId + " Total clients: " + _clients.Count);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("SocketServer:OnClientDisconnected", "Error while disconnecting client: " + ex.Message);
+            }
         }
 
         /// <summary>
@@ -118,18 +127,21 @@ namespace QuantframeLib.Socket
                 }
 
                 _clients.Add(new UserClient(e.Client.Guid, deviceId));
-                Console.WriteLine("Client connected: " + deviceId + " " + e.Client.Guid + "Total clients: " + _clients.Count);
+                Logger.Info("SocketServer:OnClientConnected", "Client connected: " + deviceId + " Total clients: " + _clients.Count);
             }
             catch (Exception)
             {
-                Console.WriteLine("Invalid client connection attempt. Disconnecting client.");
+                Logger.Error("SocketServer:OnClientConnected", "Invalid client connection attempt. Disconnecting client.");
                 e.Client.Ws.Abort();
             }
 
         }
         #endregion
         #region Method Get Set
-
+        public static List<UserClient> Clients
+        {
+            get { return _clients; }
+        }
         #endregion
     }
 }
