@@ -121,7 +121,8 @@ namespace QuantframeLib.Model
                 {
                     while (true)
                     {
-                        _isAlecaFrameOpen = Process.GetProcessesByName("AlecaFrame").FirstOrDefault() != null;
+                        Process process = Process.GetProcessesByName("AlecaFrame").FirstOrDefault();
+                        _isAlecaFrameOpen = process != null;
                         Thread.Sleep(1000);
                     }
                 }

@@ -44,14 +44,14 @@ namespace QuantframeLib
 
 
 
-            Logger.Info("Main", $"StoragePath: {storagePath} | SocketHost: {SocketHost.Item1}:{SocketHost.Item2} | HttpServer: {HttpServer.Item1}:{HttpServer.Item2} | KeepAlive: {keepAliveProcessName}");
+            Logger.Info("Main", $"StoragePath: {storagePath} | SocketHost: {SocketHost.Item1}:{SocketHost.Item2} | HttpServer: {HttpServer.Item1}:{HttpServer.Item2} | KeepAlive: {keepAliveProcessName?? "N/A"}");
 
+            // Initialize the static data
+            StaticData.Initializer(storagePath);
             // Initialize the server
             SocketServer.Initializer(SocketHost.Item1, SocketHost.Item2);
             // Initialize the log parser
             LogParserClient.Initializer();
-            // Initialize the static data
-            StaticData.Initializer(storagePath);
             // Initialize the http server
             HttpServerClient.Initializer(HttpServer.Item1, HttpServer.Item2);
             new Thread(() =>

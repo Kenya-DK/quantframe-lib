@@ -20,9 +20,6 @@ namespace QuantframeLib.LogParser
         #region Const/Static Values
         #endregion
         #region Private Values
-        private static long lastPosition = 0;
-        private static bool _coldStart = true;
-        private static string _lastReadMethod = "";
         #endregion
         #region New
         public static void Initializer()
@@ -34,6 +31,7 @@ namespace QuantframeLib.LogParser
 
         private static void ProcessLine(string line)
         {
+            Logger.Info("A", line);
             if (OnTradeEvent.ProcessLine(line))
                 return;
             if (OnConversationEvent.ProcessLine(line))
@@ -51,51 +49,30 @@ namespace QuantframeLib.LogParser
                 {
                     try
                     {
-                        string mode = "";
-                        //if (StaticData.WFProcessID == -1)
-                        //    continue;
+                        if (StaticData.WFProcessID == -1)
+                            continue;
                         if (StaticData.IsAlecaFrameOpen)
                         {
-                            mode = "file";
                             string eeLogPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Warframe\EE.log");
-                            DateTime lastCheckedTime = DateTime.MinValue; // Initialize to a default value
-                            if (!File.Exists(eeLogPath))
-                                continue;
-                            DateTime lastModifiedTime = File.GetLastWriteTime(eeLogPath);
-                            if (lastModifiedTime > lastCheckedTime)
+                            Logger.Info("Log:ReadMethod", "Reading EE.log using file");
+                            using (var fs = new FileStream(eeLogPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+                            using (var reader = new StreamReader(fs))
                             {
-                                lastCheckedTime = lastModifiedTime;
-
-                                // Get the length of the file
-                                long fileLength = new FileInfo(eeLogPath).Length;
-                                if (fileLength <= 0)
-                                    lastPosition = 0;
-                                // Open the file and move to the last position read
-                                using (FileStream fs = new FileStream(eeLogPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                                while (StaticData.WFProcessID != -1 && StaticData.IsAlecaFrameOpen)
                                 {
-                                    // Set the file pointer to the last position
-                                    fs.Seek(lastPosition, SeekOrigin.Begin);
-
-                                    // Read new lines
-                                    if (!_coldStart)
-                                        using (StreamReader reader = new StreamReader(fs))
-                                        {
-                                            string line;
-                                            while ((line = reader.ReadLine()) != null)
-                                                ProcessLine(line);
-                                        }
-                                    _coldStart = false;
-                                    lastPosition = fileLength;
+                                    var line = reader.ReadLine();
+                                    //if (!string.IsNullOrWhiteSpace(line))
+                                    //    ProcessLine(line);
                                 }
                             }
                         }
                         else
                         {
-                            mode = "memory";
                             using (MemoryMappedFile orOpen = MemoryMappedFile.CreateOrOpen("DBWIN_BUFFER", 4096L))
                             using (EventWaitHandle eventWaitHandle1 = new EventWaitHandle(false, EventResetMode.AutoReset, "DBWIN_BUFFER_READY", out bool createdNew1))
                                 try
                                 {
+                                    Logger.Info("Log:ReadMethod", "Reading EE.log using memory");
                                     using (EventWaitHandle eventWaitHandle2 = new EventWaitHandle(false, EventResetMode.AutoReset, "DBWIN_DATA_READY", out bool createdNew2))
                                     {
                                         char[] chArray = new char[5000];
@@ -122,6 +99,7 @@ namespace QuantframeLib.LogParser
                                 }
                                 catch (Exception ex)
                                 {
+                                    Logger.Warning("Log:ReadError", $"Reading EE.log failed. Retrying in 10 seconds. {ex.Message}");
                                     Thread.Sleep(10000);
                                 }
                                 finally
@@ -130,17 +108,14 @@ namespace QuantframeLib.LogParser
                                 }
 
                         }
-                        if (_lastReadMethod != mode)
-                        {
-                            _lastReadMethod = mode;
-                            Logger.Info("Log:ReadMethod", "Reading EE.log using " + mode);
-                        }
                     }
                     catch (Exception ex)
                     {
+                        Logger.Warning("Log:ReadError", ex.Message);
                     }
                     finally
                     {
+                        Logger.Info("Log:ReadError", "Reading EE.log failed. Retrying in 10 seconds.");
                         Thread.Sleep(10000);
                     }
                 }
