@@ -40,6 +40,17 @@ namespace QuantframeLib.HttpServer
                 Logger.Info("HttpServerClient:OnBefore", $"Requested: {rq.Url.PathAndQuery}");
                 return false;
             };
+            _server.Routes.Add("/clients", (rq, rp, args) =>
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("[");
+                foreach (var item in SocketServer.Clients)
+                {
+
+                }
+                sb.AppendLine("[");
+                rp.WithCORS().AsText(sb.ToString());
+            });
             _server.Routes.Add("/", (rq, rp, args) =>
             {
                 rp.WithCORS().AsText("asd");

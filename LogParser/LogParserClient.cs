@@ -31,7 +31,6 @@ namespace QuantframeLib.LogParser
 
         private static void ProcessLine(string line)
         {
-            Logger.Info("A", line);
             if (OnTradeEvent.ProcessLine(line))
                 return;
             if (OnConversationEvent.ProcessLine(line))

@@ -19,6 +19,7 @@ namespace QuantframeLib.HttpServer.Types
         private int _mastery_rank;
         private int _re_rolls;
         private int _bought;
+        private int? _minimum_price;
         private string _polarity;
         private int _rank;
         private List<AlecaFrameRivenAttribute> _attributes;
@@ -48,6 +49,8 @@ namespace QuantframeLib.HttpServer.Types
             sb.Append("\"polarity\":\"" + Polarity + "\",");
             sb.Append("\"rank\":" + Rank + ",");
             sb.Append("\"bought\":" + Bought + ",");
+            if (MinimumPrice.HasValue)
+                sb.Append("\"minimum_price\":" + MinimumPrice.Value + ",");
             sb.Append("\"attributes\":[");
             for (int i = 0; i < Attributes.Count; i++)
             {
@@ -127,6 +130,12 @@ namespace QuantframeLib.HttpServer.Types
         {
             get { return _bought; }
             set { _bought = value; }
+        }
+        [DataMember(Name = "minimum_price")]
+        public int? MinimumPrice
+        {
+            get { return _minimum_price; }
+            set { _minimum_price = value; }
         }
         [DataMember(Name = "attributes")]
         public List<AlecaFrameRivenAttribute> Attributes
